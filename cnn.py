@@ -1,14 +1,13 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.models import Sequential, load_model
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Input
 from PIL import Image, ImageOps
 from keras.callbacks import EarlyStopping
-
+from sklearn.metrics import accuracy_score
 
 # tf.config.set_visible_devices([], 'GPU')
 
@@ -17,11 +16,9 @@ current_dir = os.path.dirname(__file__)
 train_image_path = os.path.join(current_dir, "dataset", "mnist_train.csv")
 test_image_path = os.path.join(current_dir, "dataset", "mnist_test.csv")
 X_train = pd.read_csv(train_image_path, header=None).drop(columns=[0]).values
-y_train = pd.read_csv(train_image_path, header=None)[0]
-X_train, X_val, y_train, y_val = train_test_split(X_train_reshaped, y_train, test_size=0.2, random_state=42)
-
+y_train = pd.read_csv(train_image_path, header=None)[0].astype(int)
 X_test = pd.read_csv(test_image_path, header=None).drop(columns=[0]).values
-y_test = pd.read_csv(test_image_path, header=None)[0]
+y_test = pd.read_csv(test_image_path, header=None)[0].astype(int)
 
 print('Reshaping data')
 X_train_reshaped = X_train.reshape(-1, 28, 28, 1)
@@ -61,14 +58,11 @@ else:
     model.save(model_path)
 
 print('================================================================================================')
-print(model.summary())
-print('================================================================================================')
-test_loss, test_accuracy = model.evaluate(X_test_reshaped, y_test)
-print("Test Loss:", test_loss)
-print("Test Accuracy:", test_accuracy)
+model.summary()
 print('================================================================================================')
 
-print('Loading inputs')
+print('Testing model on unseen data:')
+print('1. Testing custom inputs')
 input_dir = os.path.join(current_dir, "dataset", "my_inputs")
 image_paths = [os.path.join(input_dir, filename) for filename in os.listdir(input_dir)]
 sorted_image_paths = sorted(image_paths, key=lambda x: int(os.path.splitext(os.path.basename(x))[0]))
@@ -95,3 +89,13 @@ for image in image_data:
     i += 1
     prediction = model.predict(image)
     print(f"Predicted image with digit {i}:", np.argmax(prediction))
+
+print('2. Testing test dataset')
+predictions = model.predict(X_test_reshaped)
+predicted_classes = np.argmax(predictions, axis=1)
+
+accuracy = accuracy_score(y_test, predicted_classes)
+print("Accuracy:", accuracy)
+test_loss, test_accuracy = model.evaluate(X_test_reshaped, y_test)
+print("Test Loss:", test_loss)
+print("Test Accuracy:", test_accuracy)
