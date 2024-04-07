@@ -1,2 +1,6 @@
 .DS_Store
-dataset/mnist_train.csv
+
+dataset/mnist*.csv
+
+cnn/__pycache__
+mlp/__pycache__
